@@ -2,13 +2,13 @@ const BUILD_TAG = "tp-4186";
 
 import { useEffect, useState } from "react";
 import axios from "axios";
-import {
-  Routes,
-  Route,
-} from "react-router-dom";
+import { Route, Routes } from "react-router-dom";
 
 import Layout from "./components/Layout";
 import Home from "./pages/Home";
+import Play from "./pages/Play";
+import Result from "./pages/Result";
+import History from "./pages/History";
 import QuestionBank from "./pages/QuestionBank";
 import QuestionDetail from "./pages/QuestionDetail";
 import NotFound from "./pages/NotFound";
@@ -17,6 +17,7 @@ const App = () => {
   const [questions, setQuestions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [playerName, setPlayerName] = useState("");
 
   useEffect(() => {
     const controller = new AbortController();
@@ -31,7 +32,10 @@ const App = () => {
         setQuestions(response.data);
         setError(false);
       } catch (err) {
-        if (!axios.isCancel(err)) {
+        if (
+          !axios.isCancel(err) &&
+          err.code !== "ERR_CANCELED"
+        ) {
           setError(true);
         }
       } finally {
@@ -43,9 +47,7 @@ const App = () => {
 
     fetchQuestions();
 
-    return () => {
-      controller.abort();
-    };
+    return () => controller.abort();
   }, []);
 
   return (
@@ -57,40 +59,18 @@ const App = () => {
             questions={questions}
             loading={loading}
             error={error}
+            playerName={playerName}
+            setPlayerName={setPlayerName}
           />
         }
       >
         <Route index element={<Home />} />
-
-        <Route
-          path="questions"
-          element={<QuestionBank />}
-        />
-
-        <Route
-          path="questions/:id"
-          element={<QuestionDetail />}
-        />
-
-        <Route
-          path="history"
-          element={<h2>Lịch sử</h2>}
-        />
-
-        <Route
-          path="play"
-          element={<h2>Màn hình chơi</h2>}
-        />
-
-        <Route
-          path="result"
-          element={<h2>Kết quả lượt chơi</h2>}
-        />
-
-        <Route
-          path="*"
-          element={<NotFound />}
-        />
+        <Route path="play" element={<Play />} />
+        <Route path="result" element={<Result />} />
+        <Route path="history" element={<History />} />
+        <Route path="questions" element={<QuestionBank />} />
+        <Route path="questions/:id" element={<QuestionDetail />} />
+        <Route path="*" element={<NotFound />} />
       </Route>
     </Routes>
   );

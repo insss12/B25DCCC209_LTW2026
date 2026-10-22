@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Link, useOutletContext } from "react-router-dom";
 import { LEVELS } from "../data";

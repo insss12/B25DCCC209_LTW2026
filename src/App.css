@@ -21,10 +21,10 @@ body {
 }
 
 .nav-links a {
-  margin: 0 12px;
+  display: inline-block;
+  margin: 5px 12px;
   color: #222;
   text-decoration: none;
-  font-size: 15px;
 }
 
 .nav-links a.active {
@@ -33,7 +33,7 @@ body {
 }
 
 .container {
-  max-width: 1000px;
+  max-width: 1100px;
   margin: 30px auto;
   padding: 0 15px;
 }
@@ -44,13 +44,60 @@ h1 {
 }
 
 h2 {
-  font-size: 22px;
+  font-size: 21px;
   color: #111;
 }
 
 p {
   font-size: 16px;
   line-height: 1.6;
+}
+
+.page-box {
+  background: white;
+  padding: 25px;
+  border: 1px solid #e5e5e5;
+  border-radius: 5px;
+}
+
+.name-form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  margin-top: 25px;
+}
+
+.name-form input {
+  width: 260px;
+  max-width: 90%;
+  padding: 10px;
+  border: 1px solid #bbb;
+  border-radius: 4px;
+  font: inherit;
+}
+
+.primary-btn,
+.secondary-btn {
+  display: inline-block;
+  padding: 10px 16px;
+  margin: 10px 5px;
+  background: #333;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  text-decoration: none;
+  font: inherit;
+  cursor: pointer;
+}
+
+.primary-btn:disabled {
+  background: #aaa;
+  cursor: not-allowed;
+}
+
+.secondary-btn {
+  background: #666;
 }
 
 .filters {
@@ -61,10 +108,14 @@ p {
 .filters input {
   padding: 9px;
   margin: 5px;
-  font-family: inherit;
+  font: inherit;
   border: 1px solid #bbb;
   border-radius: 4px;
-  color: #222;
+}
+
+.filters input {
+  width: 260px;
+  max-width: 90%;
 }
 
 table {
@@ -84,7 +135,6 @@ td {
 
 th {
   background: #e8e8e8;
-  font-weight: bold;
 }
 
 td a {
@@ -103,32 +153,140 @@ td a:hover {
   margin: 10px auto;
   max-width: 600px;
   border-radius: 4px;
-  color: #222;
 }
 
 .option.correct {
   background: #d7f0d4;
 }
 
-.primary-btn {
-  display: inline-block;
-  padding: 10px 16px;
-  margin: 10px;
-  background: #333;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  text-decoration: none;
-  font-family: inherit;
-  cursor: pointer;
+.game-page {
+  text-align: center;
 }
 
-.home,
-.detail,
-.not-found {
+.timer {
+  display: inline-block;
+  padding: 8px 18px;
   background: white;
-  padding: 25px;
-  margin: auto;
-  border: 1px solid #e5e5e5;
+  border: 1px solid #ddd;
   border-radius: 5px;
+  font-weight: bold;
+}
+
+.timer.warning {
+  color: red;
+}
+
+.game-layout {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 20px;
+  margin-top: 15px;
+}
+
+.question-card {
+  flex: 1;
+  min-width: 0;
+  background: white;
+  padding: 22px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+}
+
+.question-text {
+  font-size: 18px;
+  font-weight: 600;
+  margin: 25px auto;
+}
+
+.answer-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.answer-btn {
+  min-height: 58px;
+  padding: 12px;
+  background: white;
+  color: #222;
+  border: 1px solid #aaa;
+  border-radius: 5px;
+  font: inherit;
+  cursor: pointer;
+  overflow-wrap: anywhere;
+}
+
+.answer-btn:disabled {
+  cursor: default;
+}
+
+.answer-btn.selected {
+  background: #ffbd66;
+  border-color: #e28a16;
+}
+
+.answer-btn.correct {
+  background: #bde8b8;
+  border-color: #5c9d52;
+}
+
+.answer-btn.wrong {
+  background: #f3b4b4;
+  border-color: #c44;
+}
+
+.money-ladder {
+  width: 260px;
+  flex-shrink: 0;
+  background: white;
+  border: 1px solid #ddd;
+  padding: 12px;
+  border-radius: 5px;
+}
+
+.money-step {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 5px 8px;
+  border-bottom: 1px solid #eee;
+  font-size: 14px;
+}
+
+.money-step.current {
+  background: #ffdf99;
+}
+
+.money-step.milestone {
+  font-weight: bold;
+}
+
+.keyboard-hint {
+  color: #555;
+  font-size: 14px;
+}
+
+@media (max-width: 750px) {
+  .game-layout {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .money-ladder {
+    width: auto;
+  }
+
+  .answer-grid {
+    grid-template-columns: 1fr;
+  }
+
+  table {
+    font-size: 13px;
+  }
+
+  th,
+  td {
+    padding: 7px;
+  }
 }

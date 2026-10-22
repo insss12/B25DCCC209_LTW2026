@@ -1,24 +1,66 @@
-
-import { Link } from "react-router-dom";
+import {
+  useOutletContext,
+  useNavigate,
+} from "react-router-dom";
 
 const Home = () => {
+  const { playerName, setPlayerName } =
+    useOutletContext();
+
+  const navigate = useNavigate();
+
+  const handleSubmit = (event) => {
+    event.preventDefault();
+
+    if (playerName.trim()) {
+      navigate("/play");
+    }
+  };
+
   return (
-    <div className="home">
+    <section className="home page-box">
       <h1>Ai là triệu phú?</h1>
 
       <p>
-        Trò chơi trắc nghiệm kiến thức Lập trình Web.
+        Trả lời 15 câu hỏi.
       </p>
 
       <p>
-        Trả lời 15 câu hỏi để chinh phục giải thưởng
-        15$
+        Mỗi câu có 30 giây.
+        giải thưởng 250.000.000 đ.
       </p>
 
-      <Link className="primary-btn" to="/questions">
-        Xem ngân hàng câu hỏi
-      </Link>
-    </div>
+      <p>
+        Câu 5, 10 và 15 là các mốc an toàn.
+      </p>
+
+      <form
+        className="name-form"
+        onSubmit={handleSubmit}
+      >
+        <label htmlFor="playerName">
+          Tên người chơi
+        </label>
+
+        <input
+          id="playerName"
+          type="text"
+          value={playerName}
+          placeholder="Nhập tên của bạn"
+          onChange={(event) =>
+            setPlayerName(event.target.value)
+          }
+        />
+
+        <button
+          className="primary-btn"
+          type="submit"
+          disabled={!playerName.trim()}
+        >
+          Bắt đầu
+        </button>
+      </form>
+    </section>
   );
 };
 
