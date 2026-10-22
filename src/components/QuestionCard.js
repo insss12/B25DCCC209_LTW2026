@@ -6,6 +6,7 @@ const QuestionCard = ({
   currentIndex,
   status,
   selectedAnswer,
+  hiddenAnswers,
   onAnswer,
 }) => {
   return (
@@ -26,6 +27,7 @@ const QuestionCard = ({
             selectedAnswer={selectedAnswer}
             correctAnswer={question.answer}
             status={status}
+            hidden={hiddenAnswers.includes(index)}
             onClick={onAnswer}
           />
         ))}

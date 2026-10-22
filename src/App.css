@@ -75,29 +75,42 @@ p {
   border: 1px solid #bbb;
   border-radius: 4px;
   font: inherit;
+  color: #222;
 }
 
 .primary-btn,
-.secondary-btn {
+.secondary-btn,
+.stop-btn {
   display: inline-block;
   padding: 10px 16px;
   margin: 10px 5px;
-  background: #333;
-  color: white;
   border: none;
   border-radius: 4px;
-  text-decoration: none;
   font: inherit;
+  text-decoration: none;
   cursor: pointer;
 }
 
-.primary-btn:disabled {
-  background: #aaa;
-  cursor: not-allowed;
+.primary-btn {
+  background: #333;
+  color: white;
 }
 
 .secondary-btn {
   background: #666;
+  color: white;
+}
+
+.stop-btn {
+  background: #a83232;
+  color: white;
+}
+
+.primary-btn:disabled,
+.secondary-btn:disabled,
+.stop-btn:disabled {
+  background: #aaa;
+  cursor: not-allowed;
 }
 
 .filters {
@@ -109,6 +122,7 @@ p {
   padding: 9px;
   margin: 5px;
   font: inherit;
+  color: #222;
   border: 1px solid #bbb;
   border-radius: 4px;
 }
@@ -120,17 +134,17 @@ p {
 
 table {
   width: 100%;
+  margin: 20px auto;
   background: white;
   border-collapse: collapse;
-  margin: 20px auto;
 }
 
 th,
 td {
-  border: 1px solid #ddd;
   padding: 12px;
-  text-align: center;
+  border: 1px solid #ddd;
   color: #222;
+  text-align: center;
 }
 
 th {
@@ -147,16 +161,17 @@ td a:hover {
 }
 
 .option {
+  max-width: 600px;
+  margin: 10px auto;
+  padding: 12px;
   background: white;
   border: 1px solid #ddd;
-  padding: 12px;
-  margin: 10px auto;
-  max-width: 600px;
   border-radius: 4px;
 }
 
 .option.correct {
   background: #d7f0d4;
+  border-color: #5c9d52;
 }
 
 .game-page {
@@ -184,19 +199,22 @@ td a:hover {
   margin-top: 15px;
 }
 
-.question-card {
+.game-main {
   flex: 1;
   min-width: 0;
-  background: white;
+}
+
+.question-card {
   padding: 22px;
+  background: white;
   border: 1px solid #ddd;
   border-radius: 5px;
 }
 
 .question-text {
+  margin: 25px auto;
   font-size: 18px;
   font-weight: 600;
-  margin: 25px auto;
 }
 
 .answer-grid {
@@ -236,12 +254,16 @@ td a:hover {
   border-color: #c44;
 }
 
+.answer-btn.hidden-answer {
+  visibility: hidden;
+}
+
 .money-ladder {
   width: 260px;
   flex-shrink: 0;
+  padding: 12px;
   background: white;
   border: 1px solid #ddd;
-  padding: 12px;
   border-radius: 5px;
 }
 
@@ -262,15 +284,85 @@ td a:hover {
   font-weight: bold;
 }
 
-.keyboard-hint {
-  color: #555;
-  font-size: 14px;
+.lifelines {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin: 15px 0;
+}
+
+.lifelines button {
+  margin: 5px;
+}
+
+.audience-chart {
+  margin-top: 20px;
+  padding: 18px;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  text-align: left;
+}
+
+.audience-chart h3 {
+  text-align: center;
+}
+
+.audience-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 12px 0;
+}
+
+.audience-label {
+  width: 60px;
+  flex-shrink: 0;
+  font-weight: bold;
+}
+
+.audience-track {
+  flex: 1;
+  height: 22px;
+  background: #eee;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.audience-bar {
+  height: 100%;
+  background: #80b5df;
+}
+
+.record {
+  margin: 25px 0;
+  color: #333;
+  font-weight: bold;
+}
+
+.history-stats {
+  padding: 10px;
+  margin-bottom: 20px;
+  background: #f4f4f4;
+  border: 1px solid #ddd;
+}
+
+.history-stats p {
+  margin: 8px;
+}
+
+.result p {
+  font-size: 17px;
 }
 
 @media (max-width: 750px) {
   .game-layout {
     flex-direction: column;
     align-items: stretch;
+  }
+
+  .game-main {
+    width: 100%;
   }
 
   .money-ladder {
@@ -281,6 +373,16 @@ td a:hover {
     grid-template-columns: 1fr;
   }
 
+  .lifelines {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .lifelines button {
+    width: 100%;
+    margin: 5px 0;
+  }
+
   table {
     font-size: 13px;
   }
@@ -288,5 +390,14 @@ td a:hover {
   th,
   td {
     padding: 7px;
+    overflow-wrap: anywhere;
+  }
+
+  .container {
+    padding: 0 10px;
+  }
+
+  .page-box {
+    padding: 15px;
   }
 }

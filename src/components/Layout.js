@@ -7,6 +7,9 @@ const Layout = ({
   error,
   playerName,
   setPlayerName,
+  history,
+  setHistory,
+  recordHistory,
 }) => {
   return (
     <div className="app">
@@ -20,6 +23,9 @@ const Layout = ({
             error,
             playerName,
             setPlayerName,
+            history,
+            setHistory,
+            recordHistory,
           }}
         />
       </main>

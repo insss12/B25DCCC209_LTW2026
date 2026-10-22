@@ -5,9 +5,14 @@ const AnswerButton = ({
   selectedAnswer,
   correctAnswer,
   status,
+  hidden,
   onClick,
 }) => {
   let className = "answer-btn";
+
+  if (hidden) {
+    className += " hidden-answer";
+  }
 
   if (
     status === "locked" &&
@@ -28,10 +33,10 @@ const AnswerButton = ({
     <button
       type="button"
       className={className}
-      disabled={status !== "answering"}
+      disabled={status !== "answering" || hidden}
       onClick={() => onClick(index)}
     >
-      {letter}. {option}
+      {hidden ? "" : `${letter}. ${option}`}
     </button>
   );
 };

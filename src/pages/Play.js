@@ -14,9 +14,14 @@ import {
 import QuestionCard from "../components/QuestionCard";
 import Timer from "../components/Timer";
 import MoneyLadder from "../components/MoneyLadder";
+import Lifelines from "../components/LifeLines";
+import AudienceChart from "../components/AudienceChart";
 
 import { TIME_PER_QUESTION } from "../data";
-import { calcPrize } from "../utils";
+import {
+  calcPrize,
+  createAudiencePercentages,
+} from "../utils";
 
 const Play = () => {
   const {
@@ -24,6 +29,7 @@ const Play = () => {
     loading,
     error,
     playerName,
+    recordHistory,
   } = useOutletContext();
 
   const navigate = useNavigate();
@@ -33,35 +39,60 @@ const Play = () => {
   const [remaining, setRemaining] = useState(
     TIME_PER_QUESTION
   );
+
   const [status, setStatus] = useState("answering");
   const [selectedAnswer, setSelectedAnswer] = useState(null);
   const [isCorrect, setIsCorrect] = useState(false);
 
+  const [hiddenAnswers, setHiddenAnswers] = useState([]);
+  const [audienceData, setAudienceData] = useState(null);
+
+  const [usedLifelines, setUsedLifelines] = useState({
+    fiftyFifty: false,
+    audience: false,
+  });
+
   const finishedRef = useRef(false);
   const question = questions[currentIndex];
 
+  // Kết thúc lượt chơi và lưu lịch sử
   const finishGame = useCallback(
     (reason, finalCorrectCount = correctCount) => {
       if (finishedRef.current) return;
 
       finishedRef.current = true;
 
+      const result = {
+        playerName,
+        prize: calcPrize(finalCorrectCount, reason),
+        correctCount: finalCorrectCount,
+        reason,
+      };
+
+      recordHistory(result);
+
       navigate("/result", {
         replace: true,
-        state: {
-          playerName,
-          prize: calcPrize(finalCorrectCount, reason),
-          correctCount: finalCorrectCount,
-          reason,
-        },
+        state: result,
       });
     },
-    [correctCount, navigate, playerName]
+    [
+      correctCount,
+      navigate,
+      playerName,
+      recordHistory,
+    ]
   );
 
+  // Chọn đáp án
   const handleAnswer = useCallback(
     (answerIndex) => {
-      if (status !== "answering" || !question) {
+      if (
+        status !== "answering" ||
+        !question ||
+        remaining <= 0 ||
+        hiddenAnswers.includes(answerIndex)
+      ) {
         return;
       }
 
@@ -69,8 +100,73 @@ const Play = () => {
       setIsCorrect(answerIndex === question.answer);
       setStatus("locked");
     },
-    [question, status]
+    [
+      hiddenAnswers,
+      question,
+      remaining,
+      status,
+    ]
   );
+
+  // Quyền trợ giúp 50:50
+  const handleFiftyFifty = () => {
+    if (
+      usedLifelines.fiftyFifty ||
+      status !== "answering" ||
+      !question
+    ) {
+      return;
+    }
+
+    const wrongAnswers = [0, 1, 2, 3].filter(
+      (index) => index !== question.answer
+    );
+
+    // Xáo trộn danh sách đáp án sai
+    for (let i = wrongAnswers.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+
+      [wrongAnswers[i], wrongAnswers[j]] = [
+        wrongAnswers[j],
+        wrongAnswers[i],
+      ];
+    }
+
+    setHiddenAnswers(wrongAnswers.slice(0, 2));
+
+    setUsedLifelines((old) => ({
+      ...old,
+      fiftyFifty: true,
+    }));
+  };
+
+  // Quyền trợ giúp hỏi khán giả
+  const handleAskAudience = () => {
+    if (
+      usedLifelines.audience ||
+      status !== "answering" ||
+      !question
+    ) {
+      return;
+    }
+
+    const percentages = createAudiencePercentages(
+      question.answer,
+      hiddenAnswers
+    );
+
+    setAudienceData(percentages);
+
+    setUsedLifelines((old) => ({
+      ...old,
+      audience: true,
+    }));
+  };
+
+  // Dừng cuộc chơi
+  const handleStop = () => {
+    finishGame("stop", correctCount);
+  };
 
   // Đồng hồ đếm ngược
   useEffect(() => {
@@ -85,9 +181,12 @@ const Play = () => {
     return () => clearInterval(interval);
   }, [status]);
 
-  // Hết giờ thì kết thúc lượt chơi
+  // Hết giờ
   useEffect(() => {
-    if (status === "answering" && remaining === 0) {
+    if (
+      status === "answering" &&
+      remaining === 0
+    ) {
       finishGame("timeout", correctCount);
     }
   }, [
@@ -97,7 +196,7 @@ const Play = () => {
     status,
   ]);
 
-  // Chờ lộ đáp án và chuyển câu
+  // Chờ lộ đáp án, sau đó chuyển câu hoặc kết thúc
   useEffect(() => {
     if (status === "locked") {
       const timeout = setTimeout(() => {
@@ -123,8 +222,11 @@ const Play = () => {
 
         setCorrectCount(nextCorrectCount);
         setCurrentIndex((index) => index + 1);
+
         setSelectedAnswer(null);
         setIsCorrect(false);
+        setHiddenAnswers([]);
+        setAudienceData(null);
         setRemaining(TIME_PER_QUESTION);
         setStatus("answering");
       }, 2000);
@@ -141,20 +243,50 @@ const Play = () => {
     status,
   ]);
 
-
+  // Phím tắt A, B, C, D
   useEffect(() => {
-    if (!question) return undefined;
+    if (status !== "answering") return undefined;
 
-    const oldTitle = document.title;
+    const handleKey = (event) => {
+      if (
+        ["INPUT", "TEXTAREA", "SELECT"].includes(
+          event.target.tagName
+        )
+      ) {
+        return;
+      }
 
-    document.title =
-      `Câu ${currentIndex + 1}/15 - Ai là triệu phú`;
+      const key = event.key.toUpperCase();
+      const answerIndex = ["A", "B", "C", "D"].indexOf(
+        key
+      );
+
+      if (answerIndex === -1) return;
+
+      if (hiddenAnswers.includes(answerIndex)) return;
+
+      event.preventDefault();
+      handleAnswer(answerIndex);
+    };
+
+    window.addEventListener("keydown", handleKey);
 
     return () => {
-      document.title = oldTitle;
+      window.removeEventListener("keydown", handleKey);
     };
-  }, [currentIndex, question]);
+  }, [handleAnswer, hiddenAnswers, status]);
 
+  // Tiêu đề tab trình duyệt
+  useEffect(() => {
+    document.title =
+      `Câu ${currentIndex + 1}/15 – ${playerName}`;
+
+    return () => {
+      document.title = "Ai là triệu phú";
+    };
+  }, [currentIndex, playerName]);
+
+  // Chặn người chưa nhập tên
   if (!playerName.trim()) {
     return <Navigate to="/" replace />;
   }
@@ -182,19 +314,33 @@ const Play = () => {
       <Timer remaining={remaining} />
 
       <div className="game-layout">
-        <QuestionCard
-          question={question}
-          currentIndex={currentIndex}
-          status={status}
-          selectedAnswer={selectedAnswer}
-          onAnswer={handleAnswer}
-        />
+        <div className="game-main">
+          <QuestionCard
+            question={question}
+            currentIndex={currentIndex}
+            status={status}
+            selectedAnswer={selectedAnswer}
+            hiddenAnswers={hiddenAnswers}
+            onAnswer={handleAnswer}
+          />
+
+          <Lifelines
+            usedLifelines={usedLifelines}
+            status={status}
+            onFiftyFifty={handleFiftyFifty}
+            onAskAudience={handleAskAudience}
+            onStop={handleStop}
+          />
+
+          {audienceData && (
+            <AudienceChart percentages={audienceData} />
+          )}
+        </div>
 
         <MoneyLadder
           currentQuestion={currentIndex + 1}
         />
       </div>
-
     </div>
   );
 };
