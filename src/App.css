@@ -1,572 +1,356 @@
-/* CSS đơn giản cho bài thực hành TH03 */
+/* CSS co ban - TH03 */
 
 * {
-  box-sizing: border-box;
+    box-sizing: border-box;
 }
 
 body {
-  margin: 0;
-  padding: 0;
-  font-family: Arial, Helvetica, sans-serif;
-  font-size: 14px;
-  background: #eeeeee;
-  color: #222222;
-}
-
-button,
-input,
-select {
-  font-family: Arial, Helvetica, sans-serif;
-  font-size: 14px;
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background-color: #eeeeee;
+    color: #222;
 }
 
 .app-shell {
-  min-height: 100vh;
-  padding: 20px;
-  background: #eeeeee;
-  color: #222222;
+    padding: 20px;
+    min-height: 100vh;
 }
 
 .page-header,
-.app-shell main,
-.app-shell footer {
-  width: 100%;
-  max-width: 1100px;
-  margin-left: auto;
-  margin-right: auto;
+main,
+footer {
+    max-width: 1100px;
+    margin: auto;
 }
 
 .page-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 15px;
-  padding: 18px;
-  margin-bottom: 18px;
-  background: #ffffff;
-  border: 1px solid #cccccc;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: white;
+    padding: 15px;
+    border: 1px solid #ccc;
+    margin-bottom: 15px;
 }
 
-.eyebrow {
-  margin: 0 0 5px;
-  color: #666666;
-  font-size: 11px;
-}
-
-.page-header h1 {
-  margin: 0;
-  color: #234f87;
-  font-size: 27px;
-}
-
-.subtitle {
-  margin: 8px 0 0;
-  color: #555555;
+h1, h2 {
+    color: #24558a;
 }
 
 .header-actions {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 8px;
+    display: flex;
+    gap: 10px;
+    align-items: center;
 }
 
-.theme-button,
-.primary-button,
-.delete-button {
-  padding: 8px 12px;
-  border: 1px solid #888888;
-  border-radius: 3px;
-  cursor: pointer;
-}
-
-.theme-button {
-  background: #f5f5f5;
-  color: #222222;
-}
-
-.theme-button:hover {
-  background: #e5e5e5;
-}
-
-.build-label,
-.count-pill {
-  display: inline-block;
-  padding: 7px 9px;
-  background: #e6eef8;
-  border: 1px solid #b5c8df;
-  color: #234f87;
-  font-size: 12px;
+button {
+    padding: 7px 12px;
+    cursor: pointer;
 }
 
 .panel {
-  margin-bottom: 16px;
-  padding: 18px;
-  background: #ffffff;
-  border: 1px solid #cccccc;
+    background: white;
+    border: 1px solid #ccc;
+    padding: 15px;
+    margin-bottom: 15px;
 }
 
 .section-heading {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-bottom: 14px;
-  padding-bottom: 9px;
-  border-bottom: 1px solid #dddddd;
-}
-
-.section-heading .eyebrow {
-  margin-bottom: 4px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #ddd;
+    margin-bottom: 15px;
 }
 
 .section-heading h2 {
-  margin: 0;
-  color: #234f87;
-  font-size: 20px;
+    font-size: 20px;
 }
 
-/* Thống kê */
+/* Thong ke */
 
 .stats-grid {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 10px;
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 10px;
 }
 
 .stat-card {
-  min-height: 78px;
-  padding: 12px;
-  background: #f7f7f7;
-  border: 1px solid #cccccc;
+    padding: 12px;
+    border: 1px solid #ccc;
+    background: #f5f5f5;
 }
 
-.stat-card span {
-  display: block;
-  margin-bottom: 9px;
-  color: #555555;
-  font-size: 13px;
-}
-
+.stat-card span,
 .stat-card strong {
-  color: #222222;
-  font-size: 21px;
+    display: block;
+    margin-bottom: 8px;
 }
 
 .stat-accent {
-  background: #edf4fc;
-  border-color: #9fb9d8;
+    background: #e5effa;
 }
 
-.stat-accent strong {
-  color: #174f8a;
+/* Phan bo diem */
+
+.distribution-section {
+    margin-top: 20px;
+    border-top: 1px solid #ddd;
 }
 
-/* Tính GPA mục tiêu */
-
-.goal-controls {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: 12px;
-  align-items: end;
+.grade-distribution li {
+    margin-bottom: 8px;
 }
 
-.goal-current {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-  min-height: 65px;
-  padding: 10px;
-  background: #edf4fc;
-  border: 1px solid #b5c8df;
+.distribution-label {
+    display: inline-block;
+    width: 60px;
 }
 
-.goal-current span,
-.goal-current small {
-  color: #555555;
+.distribution-bar {
+    display: inline-block;
+    height: 10px;
+    background: steelblue;
 }
 
-.goal-current strong {
-  color: #174f8a;
-  font-size: 21px;
-}
-
-.goal-result {
-  margin-top: 12px;
-  padding: 10px;
-  border: 1px solid #cccccc;
-  background: #f7f7f7;
-  line-height: 1.5;
-}
-
-.goal-success {
-  color: #176b35;
-  background: #edf7ef;
-  border-color: #a8c9ae;
-}
-
-.goal-error {
-  color: #a32121;
-  background: #fff0f0;
-  border-color: #d9aaaa;
-}
-
-.goal-neutral {
-  color: #444444;
-}
-
-.goal-note {
-  margin: 10px 0 0;
-  color: #666666;
-  font-size: 12px;
-}
-
-/* Tìm kiếm và lọc */
+/* Loc va tim kiem */
 
 .toolbar {
-  display: flex;
-  align-items: end;
-  flex-wrap: wrap;
-  gap: 15px;
-  margin-bottom: 14px;
+    display: flex;
+    gap: 20px;
+    align-items: end;
 }
 
 .field {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-  margin-bottom: 12px;
-  color: #333333;
-}
-
-.field label,
-.field > label {
-  font-weight: bold;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    margin-bottom: 12px;
 }
 
 .field input,
 .field select,
 .score-input {
-  min-height: 34px;
-  padding: 6px 8px;
-  border: 1px solid #aaaaaa;
-  border-radius: 2px;
-  background: white;
-  color: #222222;
-}
-
-.field input:focus,
-.field select:focus,
-.score-input:focus {
-  outline: 2px solid #9bb9dc;
-  border-color: #376da8;
+    padding: 7px;
+    border: 1px solid #aaa;
 }
 
 .compact-field {
-  width: 190px;
+    width: 180px;
 }
 
 .search-field {
-  width: 280px;
-  max-width: 100%;
+    width: 280px;
 }
 
-/* Bảng điểm */
+.search-count {
+    color: #555;
+}
+
+/* Bang diem */
 
 .table-wrap {
-  width: 100%;
-  overflow-x: auto;
+    overflow-x: auto;
 }
 
 table {
-  width: 100%;
-  border-collapse: collapse;
-  background: white;
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
 }
 
-th,
-td {
-  padding: 9px 10px;
-  border: 1px solid #cccccc;
-  text-align: left;
-  vertical-align: middle;
+th, td {
+    border: 1px solid #ccc;
+    padding: 9px;
+    text-align: left;
 }
 
 th {
-  background: #dce7f3;
-  color: #222222;
-  font-weight: bold;
-  white-space: nowrap;
+    background: #dce8f5;
 }
 
 tbody tr:nth-child(even) {
-  background: #f7f7f7;
-}
-
-tbody tr:hover {
-  background: #edf4fc;
-}
-
-.course-code {
-  font-weight: bold;
-  white-space: nowrap;
-}
-
-.course-name {
-  min-width: 180px;
+    background: #f5f5f5;
 }
 
 .score-input {
-  width: 75px;
-  min-height: 30px;
+    width: 70px;
 }
 
-.grade-badge {
-  display: inline-block;
-  padding: 4px 7px;
-  background: #e8f0fa;
-  border: 1px solid #c0d0e2;
-  color: #234f87;
-}
-
-.grade-f,
-.failed-row {
-  color: #c62828;
-}
-
+.failed-row,
 .grade-f {
-  background: #fff0f0;
-  border-color: #e0b0b0;
+    color: red;
 }
 
-.failed-row td {
-  color: #c62828;
+.render-count {
+    text-align: center;
 }
 
 .delete-button {
-  padding: 5px 9px;
-  background: #f8eaea;
-  border-color: #c99a9a;
-  color: #a32121;
+    background: #f5dddd;
+    border: 1px solid #ccaaaa;
 }
 
-.delete-button:hover {
-  background: #f0dada;
+.table-actions {
+    margin-top: 15px;
 }
 
-.empty-state {
-  padding: 20px;
-  text-align: center;
-  border: 1px solid #cccccc;
-  background: #f7f7f7;
-  color: #555555;
+.secondary-button {
+    background: #eee;
+    border: 1px solid #aaa;
 }
 
-/* Form thêm môn */
+/* Form them mon */
 
 .form-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 5px 15px;
-}
-
-.form-grid .field {
-  min-width: 0;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px 20px;
 }
 
 .form-grid input,
 .form-grid select {
-  width: 100%;
+    width: 100%;
 }
 
 .primary-button {
-  margin-top: 3px;
-  background: #2d659d;
-  border-color: #214f7d;
-  color: white;
-}
-
-.primary-button:hover {
-  background: #214f7d;
+    background: #2865a0;
+    color: white;
+    border: 1px solid #24558a;
 }
 
 .field-error {
-  color: #c62828;
-  font-size: 12px;
+    color: red;
+    font-size: 12px;
 }
 
-/* Màn hình tải dữ liệu */
+/* GPA muc tieu */
+
+.goal-controls {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+}
+
+.goal-current {
+    padding: 10px;
+    background: #f5f5f5;
+    border: 1px solid #ccc;
+}
+
+.goal-current span,
+.goal-current strong {
+    display: block;
+    margin-bottom: 8px;
+}
+
+.goal-result {
+    padding: 10px;
+    margin-top: 10px;
+    border: 1px solid #ccc;
+}
+
+.goal-success {
+    color: green;
+}
+
+.goal-error,
+.error-text {
+    color: red;
+}
+
+/* Thong bao */
+
+.notice {
+    position: fixed;
+    right: 15px;
+    bottom: 15px;
+    padding: 12px;
+    background: #e5f4e9;
+    border: 1px solid #8bb59b;
+}
 
 .status-screen {
-  width: 90%;
-  max-width: 600px;
-  margin: 80px auto;
-  padding: 20px;
-  border: 1px solid #cccccc;
-  background: white;
-  text-align: center;
-  font-size: 18px;
+    margin: 50px auto;
+    padding: 20px;
+    text-align: center;
+    background: white;
 }
 
-.error-text {
-  color: #c62828;
+/* Chan trang */
+
+footer {
+    display: flex;
+    justify-content: space-between;
+    padding: 15px 0;
+    color: #666;
 }
 
-.app-shell footer {
-  display: flex;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 8px;
-  padding: 12px 3px;
-  color: #666666;
-  font-size: 12px;
-}
+/* Che do toi */
 
-/* Giao diện tối */
-
-.app-shell.theme-dark {
-  background: #292929;
-  color: #eeeeee;
+.theme-dark {
+    background: #333;
+    color: white;
 }
 
 .theme-dark .page-header,
 .theme-dark .panel,
 .theme-dark .status-screen {
-  background: #383838;
-  border-color: #666666;
-}
-
-.theme-dark .page-header h1,
-.theme-dark .section-heading h2 {
-  color: #a9c9ed;
-}
-
-.theme-dark .subtitle,
-.theme-dark .eyebrow,
-.theme-dark .field,
-.theme-dark .stat-card span,
-.theme-dark .goal-current span,
-.theme-dark .goal-current small,
-.theme-dark .goal-note,
-.theme-dark footer {
-  color: #dddddd;
+    background: #444;
+    color: white;
+    border-color: #666;
 }
 
 .theme-dark .stat-card,
 .theme-dark .goal-current,
-.theme-dark .goal-result,
-.theme-dark .empty-state {
-  background: #454545;
-  border-color: #666666;
-  color: #eeeeee;
-}
-
-.theme-dark .stat-card strong,
-.theme-dark .goal-current strong {
-  color: #c4dcf7;
+.theme-dark .goal-result {
+    background: #555;
+    color: white;
 }
 
 .theme-dark th {
-  background: #4b5d70;
-  color: white;
+    background: #555;
+    color: white;
 }
 
 .theme-dark td {
-  border-color: #666666;
+    border-color: #666;
 }
 
 .theme-dark tbody tr:nth-child(even) {
-  background: #414141;
+    background: #484848;
 }
 
-.theme-dark tbody tr:hover {
-  background: #505050;
+.theme-dark input,
+.theme-dark select {
+    background: #444;
+    color: white;
 }
 
-.theme-dark .field input,
-.theme-dark .field select,
-.theme-dark .score-input {
-  background: #292929;
-  color: white;
-  border-color: #777777;
-}
+/* Man hinh nho */
 
-.theme-dark .theme-button {
-  background: #454545;
-  color: white;
-  border-color: #777777;
-}
+@media (max-width: 700px) {
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
 
-.theme-dark .build-label,
-.theme-dark .count-pill,
-.theme-dark .grade-badge {
-  background: #34495e;
-  color: #dcecff;
-  border-color: #607d9b;
-}
+    .form-grid,
+    .goal-controls {
+        grid-template-columns: 1fr;
+    }
 
-.theme-dark .goal-success {
-  background: #284331;
-  color: #c9f0d0;
-}
+    .page-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
 
-.theme-dark .goal-error {
-  background: #512e2e;
-  color: #ffd0d0;
-}
+    .toolbar {
+        flex-direction: column;
+        align-items: stretch;
+    }
 
-/* Responsive */
-
-@media (max-width: 850px) {
-  .stats-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  .goal-controls {
-    grid-template-columns: 1fr 1fr;
-  }
-
-  .goal-current {
-    grid-column: 1 / -1;
-  }
-}
-
-@media (max-width: 600px) {
-  .app-shell {
-    padding: 10px;
-  }
-
-  .page-header,
-  .panel {
-    padding: 13px;
-  }
-
-  .page-header {
-    align-items: flex-start;
-  }
-
-  .page-header h1 {
-    font-size: 23px;
-  }
-
-  .stats-grid,
-  .goal-controls,
-  .form-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .goal-current {
-    grid-column: auto;
-  }
-
-  .compact-field,
-  .search-field {
-    width: 100%;
-  }
-
-  .app-shell footer {
-    flex-direction: column;
-  }
+    .compact-field,
+    .search-field {
+        width: 100%;
+    }
 }

@@ -1,14 +1,45 @@
-import React, { useEffect, useMemo, useReducer, useRef, useState } from 'react';
-import { CREDIT_OPTIONS, SEMESTERS, formatPoint } from './data';
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState
+} from 'react';
+import './App.css';
+import { useDispatch, useSelector } from 'react-redux';
+
+import {
+  CREDIT_OPTIONS,
+  GRADES,
+  SEMESTERS
+} from './data';
+
 import { calcStats, getGrade } from './utils';
-import { coursesReducer } from './coursesReducer';
+
 import { useFetch } from './hooks/useFetch';
-import { useTheme } from './context/ThemeContext';
-import GpaGoal from './components/GpaGoal';
+import { useLocalStorage } from './hooks/useLocalStorage';
+import { useDebounce } from './hooks/useDebounce';
+
+import { useTheme } from './context/ThemeContext.jsx';
+import { useNotice } from './context/NoticeContext.jsx';
+
+import { hasSaved } from './redux/store';
+
+import {
+  addCourse,
+  removeCourse,
+  setCourseScore,
+  setCourses
+} from './redux/coursesSlice';
+
+import GpaGoal from './components/GpaGoal.jsx';
+import CourseRow from './components/CourseRow.jsx';
+
 import './App.css';
 
 const BUILD_TAG = "gp-4073";
 
+// Form mặc định
 const initialForm = {
   code: '',
   name: '',
@@ -17,190 +48,521 @@ const initialForm = {
   score: ''
 };
 
-export default function App() {
+// Component thống kê
+const StatCard = ({ label, value, accent }) => {
+  return (
+    <div className={`stat-card ${accent ? 'stat-accent' : ''}`}>
+      <span>{label}</span>
+      <strong>{value}</strong>
+    </div>
+  );
+};
+
+// Component trường nhập liệu
+const FormField = ({ label, error, children }) => {
+  const id = React.useId();
+
+  return (
+    <div className="field">
+      <label htmlFor={id}>{label}</label>
+
+      {React.cloneElement(children, { id })}
+
+      {error && (
+        <small className="field-error" role="alert">
+          {error}
+        </small>
+      )}
+    </div>
+  );
+};
+
+function App() {
+  const dispatch = useDispatch();
+
+  // Lấy danh sách môn học từ Redux
+  const courses = useSelector(
+    (state) => state.courses
+  );
+
+  // Context chủ đề
   const { theme, toggleTheme } = useTheme();
-  const { data, loading, error } = useFetch('/data/courses.json');
-  const [courses, dispatch] = useReducer(coursesReducer, []);
-  const [semester, setSemester] = useState('Tất cả');
-  const [query, setQuery] = useState('');
+
+  // Context thông báo
+  const { notice, showNotice } = useNotice();
+
+  // Tải dữ liệu mẫu
+  const { data, loading, error } = useFetch(
+    '/data/courses.json'
+  );
+
+  // Lưu học kỳ vào LocalStorage
+  const [semester, setSemester] = useLocalStorage(
+    'ltw_sodiem_semester',
+    'all'
+  );
+
+  // State tìm kiếm
+  const [search, setSearch] = useState('');
+
+  // Debounce tìm kiếm 300ms
+  const debouncedSearch = useDebounce(search, 300);
+
+  // State form
   const [form, setForm] = useState(initialForm);
+
+  // State lỗi form
   const [errors, setErrors] = useState({});
+
+  // Ref ô mã môn
   const codeRef = useRef(null);
 
-  useEffect(() => {
-    if (data) {
-      dispatch({ type: 'LOAD', payload: data });
-    }
-  }, [data]);
+  // Ref ô tìm kiếm
+  const searchRef = useRef(null);
 
-  const filteredCourses = useMemo(() => {
+  // Nạp dữ liệu mẫu nếu chưa có dữ liệu lưu
+  useEffect(() => {
+    if (!hasSaved && Array.isArray(data)) {
+      dispatch(setCourses(data));
+    }
+  }, [data, dispatch]);
+
+  // Lọc theo học kỳ
+  const semesterCourses = useMemo(() => {
     return courses.filter((course) => {
-      return semester === 'Tất cả' || course.semester === semester;
+      return (
+        semester === 'all' ||
+        course.semester === semester
+      );
     });
   }, [courses, semester]);
 
+  // Lọc theo từ khóa tìm kiếm
   const visibleCourses = useMemo(() => {
-    const keyword = query.trim().toLowerCase();
-    return filteredCourses.filter((course) => {
-      return !keyword
-        || course.code.toLowerCase().includes(keyword)
-        || course.name.toLowerCase().includes(keyword);
+    const keyword = debouncedSearch.trim().toLowerCase();
+
+    if (!keyword) {
+      return semesterCourses;
+    }
+
+    return semesterCourses.filter((course) => {
+      return (
+        course.code.toLowerCase().includes(keyword) ||
+        course.name.toLowerCase().includes(keyword)
+      );
     });
-  }, [filteredCourses, query]);
+  }, [semesterCourses, debouncedSearch]);
 
-  const stats = useMemo(() => calcStats(filteredCourses), [filteredCourses]);
-  const cumulativeStats = useMemo(() => calcStats(courses), [courses]);
+  // Thống kê theo học kỳ
+  const stats = useMemo(() => {
+    return calcStats(semesterCourses);
+  }, [semesterCourses]);
 
-  // Tên hàm bắt buộc theo đề bài.
-  const handleCourseShift = (event) => {
-    setQuery(event.target.value);
-  };
+  // GPA tích lũy toàn bộ môn học
+  const cumulativeStats = useMemo(() => {
+    return calcStats(courses);
+  }, [courses]);
 
-  const handleFormChange = (event) => {
+  // Phân bố điểm chữ
+  const gradeDistribution = useMemo(() => {
+    const counts = semesterCourses.reduce(
+      (result, course) => {
+        const letter = getGrade(course.score).letter;
+
+        result[letter] += 1;
+
+        return result;
+      },
+      Object.fromEntries(
+        GRADES.map((grade) => [grade.letter, 0])
+      )
+    );
+
+    return GRADES.map((grade) => ({
+      letter: grade.letter,
+      count: counts[grade.letter]
+    }));
+  }, [semesterCourses]);
+
+  // Xử lý khi tìm kiếm
+  // Tên hàm bắt buộc: handleCourseShift
+  const handleCourseShift = useCallback((event) => {
+    setSearch(event.target.value);
+  }, []);
+
+  // Xử lý thay đổi điểm
+  const handleScoreChange = useCallback((id, score) => {
+    if (
+      Number.isFinite(score) &&
+      score >= 0 &&
+      score <= 10
+    ) {
+      dispatch(
+        setCourseScore({
+          id,
+          score
+        })
+      );
+    }
+  }, [dispatch]);
+
+  // Xử lý xóa môn
+  const handleRemoveCourse = useCallback((id) => {
+    dispatch(removeCourse(id));
+  }, [dispatch]);
+
+  // Xử lý thay đổi form
+  const handleFormChange = useCallback((event) => {
     const { name, value } = event.target;
-    setForm((current) => ({ ...current, [name]: value }));
-  };
 
-  const handleAddCourse = (event) => {
+    setForm((current) => ({
+      ...current,
+      [name]: value
+    }));
+  }, []);
+
+  // Xử lý thêm môn
+  const handleAddCourse = useCallback((event) => {
     event.preventDefault();
 
     const nextErrors = {};
-    const normalizedCode = form.code.trim().toUpperCase();
-    const codeExists = courses.some(
-      (course) => course.code.trim().toUpperCase() === normalizedCode
-    );
 
+    const normalizedCode = form.code
+      .trim()
+      .toUpperCase();
+
+    const codeExists = courses.some((course) => {
+      return (
+        course.code.trim().toUpperCase() === normalizedCode
+      );
+    });
+
+    // Kiểm tra mã môn
     if (!form.code.trim()) {
       nextErrors.code = 'Hãy nhập mã môn';
     } else if (codeExists) {
       nextErrors.code = 'Mã môn đã tồn tại';
     }
 
+    // Kiểm tra tên môn
     if (!form.name.trim()) {
       nextErrors.name = 'Hãy nhập tên môn';
     }
 
+    // Kiểm tra điểm
     const score = Number(form.score);
+
     if (
-      form.score === ''
-      || !Number.isFinite(score)
-      || score < 0
-      || score > 10
+      form.score === '' ||
+      !Number.isFinite(score) ||
+      score < 0 ||
+      score > 10
     ) {
       nextErrors.score = 'Điểm phải từ 0 đến 10';
     }
 
     setErrors(nextErrors);
-    if (Object.keys(nextErrors).length > 0) return;
 
-    dispatch({
-      type: 'ADD',
-      payload: {
-        code: normalizedCode,
-        name: form.name.trim(),
-        credits: Number(form.credits),
-        semester: form.semester,
-        score
-      }
-    });
+    // Có lỗi thì dừng
+    if (Object.keys(nextErrors).length > 0) {
+      return;
+    }
 
+    // Thêm môn vào Redux
+    dispatch(addCourse({
+      code: normalizedCode,
+      name: form.name.trim(),
+      credits: Number(form.credits),
+      semester: form.semester,
+      score
+    }));
+
+    // Reset form
     setForm(initialForm);
     setErrors({});
+
+    // Focus ô mã môn
     codeRef.current?.focus();
-  };
 
-  const handleScoreChange = (id, event) => {
-    const score = event.target.valueAsNumber;
-    if (Number.isFinite(score) && score >= 0 && score <= 10) {
-      dispatch({ type: 'SET_SCORE', payload: { id, score } });
+  }, [form, courses, dispatch]);
+
+  // Đặt lại dữ liệu mẫu
+  const handleResetCourses = useCallback(() => {
+    if (Array.isArray(data)) {
+      dispatch(setCourses(data));
+
+      showNotice('Đã đặt lại dữ liệu mẫu');
     }
-  };
+  }, [data, dispatch, showNotice]);
 
-  if (loading) {
-    return <div className="status-screen" data-build={BUILD_TAG}>Đang tải bảng điểm...</div>;
+  // Phím tắt tìm kiếm
+  useEffect(() => {
+    const handleKey = (event) => {
+      const activeElement = document.activeElement;
+
+      const tagName = activeElement?.tagName?.toLowerCase();
+
+      const isEditing =
+        ['input', 'textarea', 'select'].includes(tagName) ||
+        activeElement?.isContentEditable;
+
+      // Nhấn / để tìm kiếm
+      if (
+        event.key === '/' &&
+        !isEditing &&
+        !event.ctrlKey &&
+        !event.altKey &&
+        !event.metaKey
+      ) {
+        event.preventDefault();
+
+        searchRef.current?.focus();
+      }
+
+      // Nhấn Esc để xóa tìm kiếm
+      if (
+        event.key === 'Escape' &&
+        activeElement === searchRef.current
+      ) {
+        setSearch('');
+      }
+    };
+
+    window.addEventListener('keydown', handleKey);
+
+    return () => {
+      window.removeEventListener('keydown', handleKey);
+    };
+  }, []);
+
+  // Cập nhật tiêu đề tab
+  useEffect(() => {
+    document.title = cumulativeStats.count > 0
+      ? `GPA ${cumulativeStats.gpa.toFixed(2)} – Sổ điểm`
+      : 'Sổ điểm';
+  }, [
+    cumulativeStats.count,
+    cumulativeStats.gpa
+  ]);
+
+  // Trạng thái tải dữ liệu
+  if (!hasSaved && loading) {
+    return (
+      <div
+        className="status-screen"
+        data-build={BUILD_TAG}
+      >
+        Đang tải bảng điểm...
+      </div>
+    );
   }
 
-  if (error) {
-    return <div className="status-screen error-text" data-build={BUILD_TAG}>Không tải được bảng điểm</div>;
+  // Trạng thái lỗi
+  if (!hasSaved && error) {
+    return (
+      <div
+        className="status-screen error-text"
+        data-build={BUILD_TAG}
+      >
+        Không tải được bảng điểm
+      </div>
+    );
   }
 
   return (
-    <div className={`app-shell theme-${theme}`} data-build={BUILD_TAG} data-theme={theme}>
+    <div
+      className={`app-shell theme-${theme}`}
+      data-build={BUILD_TAG}
+    >
+
+      {/* Tiêu đề */}
       <header className="page-header">
+
         <div>
-          <p className="eyebrow">STUDENT ACADEMIC TRACKER</p>
           <h1>Sổ điểm sinh viên</h1>
-          <p className="subtitle">Theo dõi kết quả học tập và GPA của bạn.</p>
+
+          <p className="subtitle">
+            Theo dõi kết quả học tập và GPA của bạn.
+          </p>
         </div>
+
         <div className="header-actions">
-          <button className="theme-button" type="button" onClick={toggleTheme}>
-            {theme === 'light' ? '☾ Giao diện tối' : '☀ Giao diện sáng'}
+
+          <button
+            className="theme-button"
+            type="button"
+            onClick={toggleTheme}
+          >
+            {theme === 'light'
+              ? 'Chế độ tối'
+              : 'Chế độ sáng'}
           </button>
-          <span className="build-label">TH03 · Bài 1 + 2</span>
+
+          <span className="build-label">
+            Build {BUILD_TAG}
+          </span>
+
         </div>
       </header>
 
       <main>
+
+        {/* Thống kê */}
         <section className="panel statistics-panel">
+
           <div className="section-heading">
-            <div>
-              <p className="eyebrow">OVERVIEW</p>
-              <h2>Thống kê</h2>
-            </div>
+            <h2>Thống kê</h2>
           </div>
 
           <div className="stats-grid">
-            <StatCard label="Số môn" value={stats.count} />
-            <StatCard label="Tổng tín chỉ" value={stats.credits} />
-            <StatCard label="GPA (hệ 4)" value={stats.gpa.toFixed(2)} accent />
-            <StatCard label="Xếp loại" value={stats.rank} />
-            <StatCard label="GPA tích lũy" value={cumulativeStats.gpa.toFixed(2)} />
+
+            <StatCard
+              label="Số môn"
+              value={stats.count}
+            />
+
+            <StatCard
+              label="Tổng tín chỉ"
+              value={stats.credits}
+            />
+
+            <StatCard
+              label="GPA (hệ 4)"
+              value={stats.gpa.toFixed(2)}
+              accent
+            />
+
+            <StatCard
+              label="Xếp loại"
+              value={stats.rank}
+            />
+
+            <StatCard
+              label="GPA tích lũy"
+              value={cumulativeStats.gpa.toFixed(2)}
+            />
+
           </div>
+
+          {/* Phân bố điểm chữ */}
+          <div className="distribution-section">
+
+            <h3>Phân bố điểm chữ</h3>
+
+            <ul className="grade-distribution">
+
+              {gradeDistribution.map((item) => (
+                <li key={item.letter}>
+
+                  <span className="distribution-label">
+                    {item.letter}: {item.count}
+                  </span>
+
+                  <span className="distribution-track">
+
+                    <span
+                      className="distribution-bar"
+                      style={{
+                        width: `${item.count * 24}px`
+                      }}
+                    />
+
+                  </span>
+
+                </li>
+              ))}
+
+            </ul>
+
+          </div>
+
         </section>
 
+        {/* Mục tiêu GPA */}
         <GpaGoal stats={cumulativeStats} />
 
+        {/* Bảng điểm */}
         <section className="panel">
-          <div className="section-heading table-heading">
-            <div>
-              <p className="eyebrow">ACADEMIC RECORD</p>
-              <h2>Bảng điểm</h2>
-            </div>
-            <span className="count-pill">{visibleCourses.length} môn đang hiển thị</span>
+
+          <div className="section-heading">
+
+            <h2>Bảng điểm</h2>
+
+            <span className="count-pill">
+              {visibleCourses.length} môn đang hiển thị
+            </span>
+
           </div>
 
+          {/* Bộ lọc */}
           <div className="toolbar">
-            <label className="field compact-field" htmlFor="semester-filter">
+
+            <label
+              className="field compact-field"
+              htmlFor="semester-filter"
+            >
               Xem học kỳ
+
               <select
                 id="semester-filter"
                 value={semester}
-                onChange={(event) => setSemester(event.target.value)}
+                onChange={(event) => {
+                  setSemester(event.target.value);
+                }}
               >
-                <option value="Tất cả">Tất cả</option>
+                <option value="all">
+                  Tất cả
+                </option>
+
                 {SEMESTERS.map((item) => (
-                  <option key={item} value={item}>{item}</option>
+                  <option
+                    key={item}
+                    value={item}
+                  >
+                    {item}
+                  </option>
                 ))}
+
               </select>
+
             </label>
 
-            <label className="field search-field" htmlFor="course-search">
-              Tìm kiếm
+            <label
+              className="field search-field"
+              htmlFor="course-search"
+            >
+              Tìm môn học
+
               <input
+                ref={searchRef}
                 id="course-search"
                 type="search"
-                value={query}
+                value={search}
                 onChange={handleCourseShift}
                 placeholder="Mã môn hoặc tên môn..."
               />
+
             </label>
+
           </div>
 
+          <p className="search-count">
+            Tìm thấy {visibleCourses.length} môn
+          </p>
+
+          {/* Bảng môn học */}
           {visibleCourses.length === 0 ? (
-            <div className="empty-state">Chưa có môn học nào</div>
+
+            <div className="empty-state">
+              Chưa có môn học nào
+            </div>
+
           ) : (
+
             <div className="table-wrap">
+
               <table>
+
                 <thead>
                   <tr>
                     <th>Mã môn</th>
@@ -210,68 +572,64 @@ export default function App() {
                     <th>Điểm (hệ 10)</th>
                     <th>Điểm chữ</th>
                     <th>Điểm (hệ 4)</th>
-                    <th>Thao tác</th>
+                    <th>Số lần render</th>
+                    <th>Xóa</th>
                   </tr>
                 </thead>
+
                 <tbody>
-                  {visibleCourses.map((course) => {
-                    const grade = getGrade(course.score);
-                    const failed = grade.letter === 'F';
 
-                    return (
-                      <tr key={course.id} className={failed ? 'failed-row' : ''}>
-                        <td className="course-code">{course.code}</td>
-                        <td className="course-name">{course.name}</td>
-                        <td>{course.credits}</td>
-                        <td>{course.semester}</td>
-                        <td>
-                          <input
-                            className="score-input"
-                            type="number"
-                            min="0"
-                            max="10"
-                            step="0.1"
-                            value={course.score}
-                            aria-label={`Điểm ${course.name}`}
-                            onChange={(event) => handleScoreChange(course.id, event)}
-                          />
-                        </td>
-                        <td>
-                          <span className={`grade-badge ${failed ? 'grade-f' : ''}`}>
-                            {failed ? 'F – Học lại' : grade.letter}
-                          </span>
-                        </td>
-                        <td>{formatPoint(grade.point)}</td>
-                        <td>
-                          <button
-                            className="delete-button"
-                            type="button"
-                            aria-label={`Xóa ${course.name}`}
-                            onClick={() => dispatch({ type: 'REMOVE', payload: course.id })}
-                          >
-                            Xóa
-                          </button>
-                        </td>
-                      </tr>
-                    );
-                  })}
+                  {visibleCourses.map((course) => (
+                    <CourseRow
+                      key={course.id}
+                      course={course}
+                      onScore={handleScoreChange}
+                      onRemove={handleRemoveCourse}
+                    />
+                  ))}
+
                 </tbody>
-              </table>
-            </div>
-          )}
-        </section>
 
-        <section className="panel form-panel">
-          <div className="section-heading">
-            <div>
-              <p className="eyebrow">NEW COURSE</p>
-              <h2>Thêm môn học</h2>
+              </table>
+
             </div>
+
+          )}
+
+          {/* Đặt lại dữ liệu */}
+          <div className="table-actions">
+
+            <button
+              className="secondary-button"
+              type="button"
+              onClick={handleResetCourses}
+              disabled={!Array.isArray(data)}
+            >
+              Đặt lại dữ liệu mẫu
+            </button>
+
           </div>
 
-          <form onSubmit={handleAddCourse} noValidate>
+        </section>
+
+        {/* Form thêm môn */}
+        <section className="panel form-panel">
+
+          <div className="section-heading">
+            <h2>Thêm môn học</h2>
+          </div>
+
+          <form
+            onSubmit={handleAddCourse}
+            noValidate
+          >
+
             <div className="form-grid">
-              <FormField label="Mã môn" error={errors.code}>
+
+              <FormField
+                label="Mã môn"
+                error={errors.code}
+              >
                 <input
                   ref={codeRef}
                   name="code"
@@ -281,7 +639,10 @@ export default function App() {
                 />
               </FormField>
 
-              <FormField label="Tên môn" error={errors.name}>
+              <FormField
+                label="Tên môn"
+                error={errors.name}
+              >
                 <input
                   name="name"
                   value={form.name}
@@ -291,22 +652,52 @@ export default function App() {
               </FormField>
 
               <FormField label="Số tín chỉ">
-                <select name="credits" value={form.credits} onChange={handleFormChange}>
+
+                <select
+                  name="credits"
+                  value={form.credits}
+                  onChange={handleFormChange}
+                >
+
                   {CREDIT_OPTIONS.map((credit) => (
-                    <option key={credit} value={credit}>{credit}</option>
+                    <option
+                      key={credit}
+                      value={credit}
+                    >
+                      {credit}
+                    </option>
                   ))}
+
                 </select>
+
               </FormField>
 
               <FormField label="Học kỳ">
-                <select name="semester" value={form.semester} onChange={handleFormChange}>
+
+                <select
+                  name="semester"
+                  value={form.semester}
+                  onChange={handleFormChange}
+                >
+
                   {SEMESTERS.map((item) => (
-                    <option key={item} value={item}>{item}</option>
+                    <option
+                      key={item}
+                      value={item}
+                    >
+                      {item}
+                    </option>
                   ))}
+
                 </select>
+
               </FormField>
 
-              <FormField label="Điểm hệ 10" error={errors.score}>
+              <FormField
+                label="Điểm hệ 10"
+                error={errors.score}
+              >
+
                 <input
                   name="score"
                   type="number"
@@ -315,40 +706,45 @@ export default function App() {
                   step="0.1"
                   value={form.score}
                   onChange={handleFormChange}
-                  placeholder="0.0 – 10.0"
+                  placeholder="0.0 - 10.0"
                 />
+
               </FormField>
+
             </div>
 
-            <button className="primary-button" type="submit">+ Thêm môn</button>
+            <button
+              className="primary-button"
+              type="submit"
+            >
+              Thêm môn
+            </button>
+
           </form>
+
         </section>
+
       </main>
 
+      {/* Thông báo */}
+      {notice && (
+        <div className="notice" role="status">
+          {notice}
+        </div>
+      )}
+
       <footer>
+
         TH03 · Sổ điểm sinh viên
-        <span>Build {BUILD_TAG} · Bài 1 + 2</span>
+
+        <span>
+          Build {BUILD_TAG} · Bài 1 + 2 + 3
+        </span>
+
       </footer>
+
     </div>
   );
 }
 
-function StatCard({ label, value, accent }) {
-  return (
-    <div className={`stat-card ${accent ? 'stat-accent' : ''}`}>
-      <span>{label}</span>
-      <strong>{value}</strong>
-    </div>
-  );
-}
-
-function FormField({ label, error, children }) {
-  const id = React.useId();
-  return (
-    <div className="field">
-      <label htmlFor={id}>{label}</label>
-      {React.cloneElement(children, { id })}
-      {error && <small className="field-error" role="alert">{error}</small>}
-    </div>
-  );
-}
+export default App;
